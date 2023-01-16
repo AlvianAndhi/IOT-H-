@@ -1,0 +1,77 @@
+const byte buzz_Pin =19 ;
+const byte trig_Pin =26 ;
+const byte echo_Pin =25 ;
+const byte pir_Pin = 27 ;
+
+//Buzz
+int freqB = 900;
+int chanlB = 0;
+int resoB = 8;
+int dutyCycleB = 128;
+
+//Ultra
+float waktu, jarak;
+
+#include <WiFi.h>
+
+const char* ssid = "Wokwi-GUEST";
+const char* pass = "";
+
+  WiFiClient alfa;
+
+//menggunakan Thingspeak
+#include <ThingSpeak.h>
+unsigned long ChannelID = 2001658;
+const char * WriteAPI = "LKMTI4NIVJM8RGFO";
+
+void setup() {
+  Serial.begin(115200);
+
+  pinMode(trig_Pin, OUTPUT);
+  pinMode(echo_Pin, INPUT);
+  pinMode(pir_Pin, INPUT_PULLUP);
+
+  ledcSetup(chanlB, freqB, resoB);
+  ledcAttachPin(buzz_Pin, chanlB);
+
+}
+
+void loop() {
+
+  digitalWrite(trig_Pin, HIGH);
+  delayMicroseconds(100);
+  digitalWrite(trig_Pin, LOW);
+
+  waktu = pulseIn(echo_Pin, HIGH);
+  jarak = 0.017 * waktu;
+
+  int pirSensor = digitalRead(pir_Pin);
+
+  if(pirSensor == 1){
+
+    Serial.println("=== GERAKAN TERDETEKSI ===");
+    ledcWrite(chanlB, dutyCycleB);
+    delay(300);
+
+    if (jarak <399){
+      Serial.print("=== JARAK : ");
+      Serial.print(jarak);
+      Serial.println(" cm ===");
+      delay(300);
+    }
+
+    else {
+      Serial.print("=== JARAK LEBIH DARI ");
+      Serial.print(jarak);
+      Serial.println(" cm ===");
+      delay(300);
+    }
+  }
+
+  else {
+    Serial.println(" -TIDAK ADA GERAKAN- ");
+    ledcWrite(chanlB, 0);
+    (jarak = 0 );
+    delay(1000);
+  }
+}
